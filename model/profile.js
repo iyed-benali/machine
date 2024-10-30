@@ -1,7 +1,7 @@
 // models/Profile.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-
+require('dotenv').config();
 const profileSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -16,7 +16,7 @@ const profileSchema = new mongoose.Schema({
 // Hash password before saving
 profileSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, process.env.limit);
   next();
 });
 
