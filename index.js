@@ -5,6 +5,7 @@ const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile')
 const auth = require('./middleware/auth');
 const authorize = require('./middleware/authorize'); 
+const otpRoute = require ('./routes/otp')
 require('dotenv').config();
 
 
@@ -12,18 +13,9 @@ const app = express();
 app.use(express.json());
 
 app.use('/auth', authRoutes);
+; 
+app.use('/otp',otpRoute)
 
-
-app.use('/profile', auth, profileRoutes); 
-
-app.get('/admin', auth, authorize('admin'), (req, res) => {
-  res.status(200).json({ message: 'Welcome Admin!' });
-});
-
-
-app.get('/machine-owner', auth, authorize('machine owner'), (req, res) => {
-  res.status(200).json({ message: 'Welcome Machine Owner!' });
-});
 
 
 

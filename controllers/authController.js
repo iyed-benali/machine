@@ -1,42 +1,60 @@
 // controllers/authController.js
 const Profile = require('../model/profile');
 const jwt = require('jsonwebtoken');
+const OTP = require ('../model/otp')
 require('dotenv').config();
 
+
 // Register Controller
+// controllers/authController.js
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, password, role } = req.body;    
+    const { fullName, email, password, role, isVerified } = req.body;
+
+    // Check for existing user
     const existingUser = await Profile.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'Email already registered' });
 
-    const profile = new Profile({ fullName, email, password, role });
+    // Create the profile
+    const profile = new Profile({ fullName, email, password, role, isVerified });
     await profile.save();
-
     res.status(201).json({ message: 'Profile created successfully' });
   } catch (error) {
+    console.error('Registration error:', error); // Log the error for debugging
     res.status(500).json({ message: 'Server error' });
   }
 };
 
+
 // Login Controller
+// controllers/authController.js
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Find the profile by email
     const profile = await Profile.findOne({ email });
-    if (!profile) return res.status(400).json({ message: 'Invalid email or password' });
+    if (!profile) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
 
+    // Check if the account is verified
+    if (!profile.isVerified) {
+      return res.status(403).json({ message: 'Account not verified. Please verify your account.' });
+    }
+
+    // Validate the password
     const isValidPassword = await profile.isPasswordValid(password);
-    if (!isValidPassword) return res.status(400).json({ message: 'Invalid email or password' });
+    if (!isValidPassword) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
 
-    // Include role in the JWT payload
-   // Example from authController.js
-const jwt = require('jsonwebtoken');
-const token = jwt.sign({ id: profile._id, role: profile.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Generate and return the JWT token
+    const token = jwt.sign({ id: profile._id, role: profile.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({ token });
   } catch (error) {
+    console.error('Login error:', error); // Log the error for debugging
     res.status(500).json({ message: 'Server error' });
   }
 };

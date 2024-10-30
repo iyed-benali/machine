@@ -10,13 +10,17 @@ const profileSchema = new mongoose.Schema({
     type: String, 
     enum: ['machine owner', 'user', 'admin'], 
     default: 'user' 
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
   }
 });
 
 // Hash password before saving
 profileSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, process.env.limit);
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
