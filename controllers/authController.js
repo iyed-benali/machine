@@ -8,8 +8,7 @@ const mailSender = require('../utils/mailsender')
 require('dotenv').config();
 
 
-// Register Controller
-// controllers/authController.js
+
 exports.register = async (req, res) => {
   try {
     const { fullName, email, password, role } = req.body;
@@ -23,7 +22,7 @@ exports.register = async (req, res) => {
     const profile = new Profile({ fullName, email, password, role });
     await profile.save();
 
-    // Generate and send OTP
+   
     let otp = otpGenerator.generate(6, {
       upperCaseAlphabets: false,
       lowerCaseAlphabets: false,
@@ -46,35 +45,33 @@ exports.register = async (req, res) => {
 };
 
 
-// Login Controller
-// controllers/authController.js
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find the profile by email
     const profile = await Profile.findOne({ email });
     if (!profile) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Check if the account is verified
+    
     if (!profile.isVerified) {
       return res.status(403).json({ message: 'Account not verified. Please verify your account.' });
     }
 
-    // Validate the password
+    
     const isValidPassword = await profile.isPasswordValid(password);
     if (!isValidPassword) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Generate and return the JWT token
+ 
     const token = jwt.sign({ id: profile._id, role: profile.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({ token });
   } catch (error) {
-    console.error('Login error:', error); // Log the error for debugging
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
