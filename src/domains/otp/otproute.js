@@ -1,5 +1,5 @@
 const express = require('express');
-const otpController = require('../controllers/otpController');
+const otpController = require('../otp/otpcontroller');
 const router = express.Router();
 router.post('/send-otp', otpController.sendOTP);
 router.post('/verify-otp',otpController.verifyOTP)

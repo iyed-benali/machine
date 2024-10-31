@@ -1,22 +1,18 @@
 // app.js
 const express = require('express');
 const mongoose = require('./database/db');
-const authRoutes = require('./routes/auth');
-const profileRoutes = require('./routes/profile')
-const auth = require('./middleware/auth');
-const authorize = require('./middleware/authorize'); 
-const otpRoute = require ('./routes/otp')
+const authRoutes = require('./routes/authRouting');
+const otpRoutes = require('./routes/otpRouting')
+
 require('dotenv').config();
 
 
 const app = express();
 app.use(express.json());
 
-app.use('/auth', authRoutes);
-; 
-app.use('/otp',otpRoute)
 
-
+app.use('/api', authRoutes);
+app.use('/api', otpRoutes);
 
 
 const port = process.env.PORT || 3000;

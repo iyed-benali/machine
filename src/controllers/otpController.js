@@ -2,7 +2,7 @@ const otpGenerator = require('otp-generator');
 const {OTP} = require('../model/otp');
 const Profile = require('../model/profile');
 const { sendVerificationEmail } = require('../model/otp');
-const mailSender = require('../utils/mailsender')
+const mailSender = require('../../utils/mailsender')
 const bcrypt = require('bcrypt');
 
 exports.sendOTP = async (req, res) => {
