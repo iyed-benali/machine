@@ -1,9 +1,9 @@
 // controllers/authController.js
-const Profile = require('../auth/authModel');
+const Profile = require('../../models/authModel');
 const jwt = require('jsonwebtoken');
-const {OTP} = require ('../otp/otpModel')
+const {OTP} = require ('../../models/otpModel')
 const otpGenerator = require('otp-generator');
-const { sendVerificationEmail } = require('../otp/otpModel');
+const { sendVerificationEmail } = require('../../models/otpModel');
 const mailSender = require('../../utils/mailsender')
 require('dotenv').config();
 
@@ -21,8 +21,6 @@ exports.register = async (req, res) => {
 
     const profile = new Profile({ fullName, email, password, role });
     await profile.save();
-
-   
     let otp = otpGenerator.generate(6, {
       upperCaseAlphabets: false,
       lowerCaseAlphabets: false,

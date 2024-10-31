@@ -1,8 +1,7 @@
 // app.js
 const express = require('express');
 const mongoose = require('./database/db');
-const authRoutes = require('./routes/authRouting');
-const otpRoutes = require('./routes/otpRouting')
+const routes = require('./routes/routes')
 
 require('dotenv').config();
 
@@ -11,7 +10,7 @@ const app = express();
 app.use(express.json());
 
 
-app.use('/api', [authRoutes, otpRoutes]);
+app.use('/api', routes);
 
 
 
