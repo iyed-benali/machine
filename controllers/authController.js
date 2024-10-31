@@ -1,7 +1,10 @@
 // controllers/authController.js
 const Profile = require('../model/profile');
 const jwt = require('jsonwebtoken');
-const OTP = require ('../model/otp')
+const {OTP} = require ('../model/otp')
+const otpGenerator = require('otp-generator');
+const { sendVerificationEmail } = require('../model/otp');
+const mailSender = require('../utils/mailsender')
 require('dotenv').config();
 
 
@@ -9,20 +12,37 @@ require('dotenv').config();
 // controllers/authController.js
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, password, role, isVerified } = req.body;
+    const { fullName, email, password, role } = req.body;
 
-    // Check for existing user
+    console.log('Before checking existing user');
     const existingUser = await Profile.findOne({ email });
+    console.log('After checking existing user');
+    
     if (existingUser) return res.status(400).json({ message: 'Email already registered' });
 
-    // Create the profile
-    const profile = new Profile({ fullName, email, password, role, isVerified });
+    const profile = new Profile({ fullName, email, password, role });
     await profile.save();
-    res.status(201).json({ message: 'Profile created successfully' });
+
+    // Generate and send OTP
+    let otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      lowerCaseAlphabets: false,
+      specialChars: false,
+    });
+
+    const otpPayload = { email, otp };
+   const data = new OTP(otpPayload)
+   await data.save() 
+    await mailSender(email,"Your OTP Code", `<h1>Your OTP is: ${otp}</h1>`)
+    console.log('ggggg')
+    await sendVerificationEmail(email, otp); 
+
+    res.status(201).json({ message: 'Profile created successfully and OTP sent' });
   } catch (error) {
-    console.error('Registration error:', error); // Log the error for debugging
+    console.error('Registration error:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
+  
 };
 
 
