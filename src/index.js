@@ -11,8 +11,8 @@ const app = express();
 app.use(express.json());
 
 
-app.use('/api', authRoutes);
-app.use('/api', otpRoutes);
+app.use('/api', [authRoutes, otpRoutes]);
+
 
 
 const port = process.env.PORT || 3000;
