@@ -1,7 +1,6 @@
 const express = require('express');
 const otpController = require('../otp/otpcontroller');
 const router = express.Router();
-router.post('/send-otp', otpController.sendOTP);
 router.post('/verify-otp',otpController.verifyOTP)
 router.post('/resend-otp', otpController.resendOTP);
 router.post('/request-password-reset', otpController.requestPasswordReset);

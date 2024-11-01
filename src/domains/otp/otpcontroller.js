@@ -13,31 +13,6 @@ function generateOTP(length = 6) {
     return otp;
   }
   
-
-exports.sendOTP = async (req, res) => {
-    try {
-      const { email } = req.body;
-     
-      let otp = generateOTP(6);
-      let result = await OTP.findOne({ otp: otp });
-      while (result) {
-        otp = generateOTP(6);
-        result = await OTP.findOne({ otp: otp });
-      }
-      
-      const otpPayload = { email, otp };
-      const otpBody = await OTP.create(otpPayload);
-  
-      res.status(200).json({
-        success: true,
-        message: 'OTP sent successfully',
-        otp,
-      });
-    } catch (error) {
-      console.log(error.message);
-      return res.status(500).json({ success: false, error: error.message });
-    }
-  };
 exports.verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -66,14 +41,12 @@ exports.resendOTP = async (req, res) => {
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
-  
-      // Check rate limit
+
       const existingOtp = await OTP.findOne({ email });
       if (existingOtp && (Date.now() - existingOtp.createdAt.getTime()) < 60000) {
         return res.status(429).json({ message: 'Please wait a minute before requesting another OTP' });
       }
   
-      // Generate new OTP
       const otp = generateOTP(6);
       await OTP.findOneAndUpdate(
         { email },
@@ -81,7 +54,6 @@ exports.resendOTP = async (req, res) => {
         { upsert: true }
       );
   
-      // Send the OTP via email
       await sendVerificationEmail(email, otp);
   
       res.status(200).json({ message: 'OTP resent successfully' });
@@ -96,17 +68,15 @@ exports.resendOTP = async (req, res) => {
       const user = await Profile.findOne({ email });
       if (!user) return res.status(404).json({ message: 'Email not found' });
   
-      // Check rate limit
-      const existingOtp = await OTP.findOne({ email });
+      const existingOtp = await OTP.findOne({ email, type: 'passwordReset' });
       if (existingOtp && (Date.now() - existingOtp.createdAt.getTime()) < 60000) {
         return res.status(429).json({ message: 'Please wait a minute before requesting another OTP' });
       }
   
-     
       const otp = generateOTP(6);
       await OTP.findOneAndUpdate(
         { email },
-        { otp, createdAt: Date.now() },
+        { otp, createdAt: Date.now(), type: 'passwordReset' },
         { upsert: true }
       );
   
@@ -145,15 +115,3 @@ exports.resendOTP = async (req, res) => {
     }
   };
 
-exports.resetPassword = async (req, res) => {
-  try {
-    const { email, newPassword } = req.body;
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await Profile.findOneAndUpdate({ email }, { password: hashedPassword });
-
-    res.status(200).json({ message: 'Password reset successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};

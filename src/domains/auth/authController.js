@@ -21,25 +21,28 @@ exports.register = async (req, res) => {
 
     const profile = new Profile({ fullName, email, password, role });
     await profile.save();
+
+    // Generate OTP
     let otp = otpGenerator.generate(6, {
       upperCaseAlphabets: false,
       lowerCaseAlphabets: false,
       specialChars: false,
     });
 
-    const otpPayload = { email, otp };
-   const data = new OTP(otpPayload)
-   await data.save() 
-    await mailSender(email,"Your OTP Code", `<h1>Your OTP is: ${otp}</h1>`)
-    console.log('ggggg')
-    await sendVerificationEmail(email, otp); 
+    // Save OTP with type 'emailVerification'
+    const otpPayload = { email, otp, type: 'emailVerification' };
+    const data = new OTP(otpPayload);
+    await data.save();
 
+    // Send the OTP via email
+    await mailSender(email, "Your OTP Code", `<h1>Your OTP is: ${otp}</h1>`);
+    console.log('OTP sent for email verification');
+    
     res.status(201).json({ message: 'Profile created successfully and OTP sent' });
   } catch (error) {
     console.error('Registration error:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
-  
 };
 
 

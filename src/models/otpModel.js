@@ -10,13 +10,19 @@ const otpSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  type: {
+    type: String,
+    enum: ['emailVerification', 'passwordReset'],
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 60 * 5,
+    expires: 60 * 5, // 5 minutes
   },
 });
-// Define a function to send emails
+
+// Send verification email
 async function sendVerificationEmail(email, otp) {
   try {
     const mailResponse = await mailSender(
@@ -32,13 +38,12 @@ async function sendVerificationEmail(email, otp) {
 }
 
 otpSchema.pre("save", async function (next) {
-  console.log("New document saved to the database");
-  // Only send an email when a new document is created
-  if (this.isNew) {
+  if (this.isNew && this.type === 'emailVerification') {
     await sendVerificationEmail(this.email, this.otp);
   }
   next();
 });
+
 module.exports = {
   OTP: mongoose.model("OTP", otpSchema),
   sendVerificationEmail
