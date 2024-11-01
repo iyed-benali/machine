@@ -4,9 +4,19 @@ const jwt = require('jsonwebtoken');
 const {OTP} = require ('../../models/otpModel')
 const otpGenerator = require('otp-generator');
 const { sendVerificationEmail } = require('../../models/otpModel');
-const mailSender = require('../../utils/mailsender')
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 require('dotenv').config();
 
+
+async function verifyGoogleToken(idToken) {
+  const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID, 
+  });
+  const payload = ticket.getPayload();
+  return payload;
+}
 
 
 exports.register = async (req, res) => {
@@ -29,13 +39,13 @@ exports.register = async (req, res) => {
       specialChars: false,
     });
 
-    // Save OTP with type 'emailVerification'
+  
     const otpPayload = { email, otp, type: 'emailVerification' };
     const data = new OTP(otpPayload);
     await data.save();
 
-    // Send the OTP via email
-    await mailSender(email, "Your OTP Code", `<h1>Your OTP is: ${otp}</h1>`);
+  
+    await sendVerificationEmail(email, otp);
     console.log('OTP sent for email verification');
     
     res.status(201).json({ message: 'Profile created successfully and OTP sent' });

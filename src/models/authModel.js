@@ -14,7 +14,9 @@ const profileSchema = new mongoose.Schema({
   isVerified: {
     type: Boolean,
     default: false
-  }
+  },
+  source: { type: String, enum: ['app', 'google', 'apple'], default: 'app' }
+
 });
 
 // Hash password before saving
