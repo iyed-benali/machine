@@ -1,51 +1,58 @@
 // controllers/authController.js
 const Profile = require('../../models/Profile.js');
 const jwt = require('jsonwebtoken');
-// const {OTP} = require ('../../models/otp.js')
 const {OTP,sendVerificationEmail} = require('../../models/otp.js')
 const otpGenerator = require('otp-generator');
-
 const { OAuth2Client } = require('google-auth-library');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const bcrypt = require('bcrypt');
+const { registerSchema } = require('../../utils/validators'); 
 require('dotenv').config();
 
 
-async function verifyGoogleToken(idToken) {
-  const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID, 
-  });
-  const payload = ticket.getPayload();
-  return payload;
+
+function generateOTP(length = 6) {
+  let otp = '';
+  for (let i = 0; i < length; i++) {
+    otp += Math.floor(Math.random() * 10); 
+  }
+  return otp;
 }
+async function generateAndHashOTP() {
+  const otp = generateOTP(6);
+  const hashedOtp = await bcrypt.hash(otp, 10);
+  return { otp, hashedOtp };
+}
+
+// async function verifyGoogleToken(idToken) {
+//   const ticket = await client.verifyIdToken({
+//       idToken,
+//       audience: process.env.GOOGLE_CLIENT_ID, 
+//   });
+//   const payload = ticket.getPayload();
+//   return payload;
+// }
 
 
 exports.register = async (req, res) => {
   try {
     const { fullName, email, password, role } = req.body;
+    const { error } = registerSchema.validate({ fullName, email, password });
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
 
-    console.log('Before checking existing user');
     const existingUser = await Profile.findOne({ email });
-    console.log('After checking existing user');
-    
     if (existingUser) return res.status(400).json({ message: 'Email already registered' });
 
     const profile = new Profile({ fullName, email, password, role });
     await profile.save();
 
-    // Generate OTP
-    let otp = otpGenerator.generate(6, {
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
-    });
-
-  
-    const otpPayload = { email, otp, type: 'emailVerification' };
+    const { otp, hashedOtp } = await generateAndHashOTP();
+    const otpPayload = { email, otp: hashedOtp, type: 'emailVerification' };
     const data = new OTP(otpPayload);
     await data.save();
 
-  
     await sendVerificationEmail(email, otp);
     console.log('OTP sent for email verification');
     
@@ -55,6 +62,7 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 
