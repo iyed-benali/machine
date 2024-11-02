@@ -1,9 +1,10 @@
 // controllers/authController.js
-const Profile = require('../../models/authModel');
+const Profile = require('../../models/Profile.js');
 const jwt = require('jsonwebtoken');
-const {OTP} = require ('../../models/otpModel')
+// const {OTP} = require ('../../models/otp.js')
+const {OTP,sendVerificationEmail} = require('../../models/otp.js')
 const otpGenerator = require('otp-generator');
-const { sendVerificationEmail } = require('../../models/otpModel');
+
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 require('dotenv').config();
