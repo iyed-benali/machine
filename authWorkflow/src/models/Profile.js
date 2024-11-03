@@ -15,18 +15,16 @@ const profileSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  source: { type: String, enum: ['app', 'google', 'apple'], default: 'app' }
-
+  source: { type: String, enum: ['App', 'Google', 'Apple'], default: 'App' }
 });
 
-// Hash password before saving
+
 profileSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-// Password verification method
 profileSchema.methods.isPasswordValid = async function (password) {
   return await bcrypt.compare(password, this.password);
 };

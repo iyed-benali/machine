@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const mailSender = require("../utils/mailsender");
 
 const otpSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Profile',
+    required: true,
+  },
   email: {
     type: String,
     required: true,
@@ -18,9 +23,10 @@ const otpSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 60 * 5, // 5 minutes
+    expires: 60 * 5,
   },
 });
+
 
 // Send verification email
 async function sendVerificationEmail(email, otp) {
