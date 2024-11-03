@@ -1,4 +1,5 @@
 const Profile = require('../../models/Profile.js');
+const Client = require ('../../../../clientWorkflow/src/models/client.js')
 const jwt = require('jsonwebtoken');
 const { OTP, sendVerificationEmail } = require('../../models/otp.js');
 const { OAuth2Client } = require('google-auth-library');
@@ -72,21 +73,45 @@ exports.googleCallback = async (req, res) => {
   }
 };
 
-// Register
+
 exports.register = async (req, res) => {
+  console.time('Registration Time'); // Start timing
+
   try {
     const { fullName, email, password, role } = req.body;
+
+    // Validate input data
     const { error } = registerSchema.validate({ fullName, email, password });
     if (error) {
+      console.timeEnd('Registration Time'); // End timing on error
       return res.status(400).json(createErrorResponse(error.details[0].message, 400));
     }
 
+    // Check if the email already exists
     const existingUser = await Profile.findOne({ email });
-    if (existingUser) return res.status(400).json(createErrorResponse('Email already registered', 400));
+    if (existingUser) {
+      console.timeEnd('Registration Time'); // End timing on error
+      return res.status(400).json(createErrorResponse('Email already registered', 400));
+    }
 
+    // Create a new profile
     const profile = new Profile({ fullName, email, password, role });
     await profile.save();
 
+    // Create a new client associated with the profile
+    const client = new Client({
+      profileId: profile._id,
+      favorites: [],
+      recent_search: [],
+      location: '',
+      lat_long: [],
+      blocked: false,
+      block_reason: '',
+      blocked_at: null,
+    });
+    await client.save();
+
+    // Generate and send OTP for email verification
     const { otp, hashedOtp } = await generateAndHashOTP();
     const otpPayload = { email, otp: hashedOtp, type: 'emailVerification', userId: profile._id };
     const data = new OTP(otpPayload);
@@ -94,15 +119,18 @@ exports.register = async (req, res) => {
 
     await sendVerificationEmail(email, otp);
     console.log('OTP sent for email verification');
-    
-    res.status(201).json({ message: 'Profile created successfully and OTP sent', ok: true });
+
+    res.status(201).json({ message: 'Profile created successfully and OTP sent' });
   } catch (error) {
     console.error('Registration error:', error.message);
     res.status(500).json(createErrorResponse('Server error', 500));
+  } finally {
+    console.timeEnd('Registration Time'); // End timing in the finally block to ensure it runs
   }
 };
 
-// Login
+
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
