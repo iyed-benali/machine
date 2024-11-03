@@ -7,6 +7,7 @@ const { registerSchema } = require('../../utils/validators');
 const axios = require('axios');
 const { generateAndHashOTP } = require('../../utils/generateOtp.js');
 require('dotenv').config();
+const { createErrorResponse } = require('../../utils/errorHandle.js');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -24,7 +25,7 @@ exports.googleCallback = async (req, res) => {
   const { code } = req.query;
 
   try {
-    // Exchange authorization code for tokens
+    
     const { data } = await axios.post('https://oauth2.googleapis.com/token', {
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
@@ -35,7 +36,7 @@ exports.googleCallback = async (req, res) => {
 
     const { access_token } = data;
 
-    // Use access_token to fetch user profile
+   
     const { data: profile } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
       headers: { Authorization: `Bearer ${access_token}` },
     });
@@ -52,7 +53,7 @@ exports.googleCallback = async (req, res) => {
       await user.save();
     }
 
-    // Generate a JWT token including email, role, and source
+    
     const token = jwt.sign(
       {
         id: user._id,
@@ -64,10 +65,10 @@ exports.googleCallback = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.status(200).json({ token });
+    res.status(200).json({ token, ok: true });
   } catch (error) {
     console.error('Google Authentication Error:', error.response?.data?.error || error.message);
-    res.redirect('/login'); 
+    res.status(500).json(createErrorResponse('Server error', 500)); 
   }
 };
 
@@ -77,11 +78,11 @@ exports.register = async (req, res) => {
     const { fullName, email, password, role } = req.body;
     const { error } = registerSchema.validate({ fullName, email, password });
     if (error) {
-      return res.status(400).json({ message: error.details[0].message });
+      return res.status(400).json(createErrorResponse(error.details[0].message, 400));
     }
 
     const existingUser = await Profile.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: 'Email already registered' });
+    if (existingUser) return res.status(400).json(createErrorResponse('Email already registered', 400));
 
     const profile = new Profile({ fullName, email, password, role });
     await profile.save();
@@ -94,10 +95,10 @@ exports.register = async (req, res) => {
     await sendVerificationEmail(email, otp);
     console.log('OTP sent for email verification');
     
-    res.status(201).json({ message: 'Profile created successfully and OTP sent' });
+    res.status(201).json({ message: 'Profile created successfully and OTP sent', ok: true });
   } catch (error) {
     console.error('Registration error:', error.message);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json(createErrorResponse('Server error', 500));
   }
 };
 
@@ -108,16 +109,16 @@ exports.login = async (req, res) => {
 
     const profile = await Profile.findOne({ email });
     if (!profile) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json(createErrorResponse('Invalid email or password', 400));
     }
 
     if (!profile.isVerified) {
-      return res.status(403).json({ message: 'Account not verified. Please verify your account.' });
+      return res.status(403).json(createErrorResponse('Account not verified. Please verify your account.', 403));
     }
 
     const isValidPassword = await profile.isPasswordValid(password);
     if (!isValidPassword) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json(createErrorResponse('Invalid email or password', 400));
     }
 
     const token = jwt.sign(
@@ -132,9 +133,9 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.status(200).json({ token });
+    res.status(200).json({ token, ok: true });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json(createErrorResponse('Server error', 500));
   }
 };
