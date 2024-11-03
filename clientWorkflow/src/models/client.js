@@ -19,7 +19,7 @@ const clientSchema = new mongoose.Schema({
       default: '',
     },
     lat_long: {
-      type: [Number], // Could represent [latitude, longitude]
+      type: [Number], 
       default: [],
     },
     blocked: {

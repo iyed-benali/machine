@@ -125,7 +125,7 @@ exports.register = async (req, res) => {
     console.error('Registration error:', error.message);
     res.status(500).json(createErrorResponse('Server error', 500));
   } finally {
-    console.timeEnd('Registration Time'); // End timing in the finally block to ensure it runs
+    console.timeEnd('Registration Time'); 
   }
 };
 

@@ -1,5 +1,4 @@
-// controllers/categoryController.js
-const Category = require('../models/Category');
+const Category = require('../../models/categories');
 const { createErrorResponse } = require('../../../../authWorkflow/src/utils/errorHandle'); 
 exports.createCategory = async (req, res) => {
   try {
@@ -35,6 +34,10 @@ exports.getCategoryById = async (req, res) => {
 };
 
 
+
+
+
+
 exports.updateCategory = async (req, res) => {
   try {
     const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -56,6 +59,20 @@ exports.deleteCategory = async (req, res) => {
     }
     res.status(200).json({ message: 'Category deleted successfully' });
   } catch (error) {
-    res.status(500).json(createErrorResponse('Server error', 500)); // Use createErrorResponse for error handling
+    res.status(500).json(createErrorResponse('Server error', 500));
+  }
+};
+
+exports.getCategoriesByType = async (req, res) => {
+  try {
+    const { type } = req.params;
+    if (!["normal", "exclusive"].includes(type)) {
+      return res.status(400).json(createErrorResponse("Invalid category type", 400));
+    }
+
+    const categories = await Category.find({ type });
+    res.status(200).json(categories);
+  } catch (error) {
+    res.status(500).json(createErrorResponse("Server error", 500));
   }
 };

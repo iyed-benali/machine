@@ -2,7 +2,10 @@
 const express = require('express');
 const mongoose = require('./database/db');
 const routes = require('./routes/routes')
-
+const categories = require('../../clientWorkflow/src/domains/category/categoriesRoutes')
+const subCat = require ('../../clientWorkflow/src/domains/subCategories/subCategoriesRoutes')
+const vendingMachines = require('../../clientWorkflow/src/domains/vending-machine/vending-machine-routes');
+const products = require('../../clientWorkflow/src/domains/products/product-routes')
 require('dotenv').config();
 
 
@@ -11,7 +14,10 @@ app.use(express.json());
 
 
 app.use('/api', routes);
-
+app.use('/cat',categories)
+app.use('/sub',subCat)
+app.use('/vending',vendingMachines)
+app.use('/product', products); 
 
 
 const port = process.env.PORT || 3000;
