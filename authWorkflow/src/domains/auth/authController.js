@@ -9,6 +9,7 @@ const axios = require('axios');
 const { generateAndHashOTP } = require('../../utils/generateOtp.js');
 require('dotenv').config();
 const { createErrorResponse } = require('../../utils/errorHandle.js');
+const Cient = require('../../../../clientWorkflow/src/models/client.js')
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -16,33 +17,14 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 
 // Google Login
-exports.googleLogin = (req, res) => {
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile email`;
-  res.redirect(url);
-};
-
-// Google Callback
-exports.googleCallback = async (req, res) => {
-  const { code } = req.query;
+exports.googleLogin = async (req, res) => {
+  const { idToken } = req.body;
 
   try {
-    
-    const { data } = await axios.post('https://oauth2.googleapis.com/token', {
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      code,
-      redirect_uri: REDIRECT_URI,
-      grant_type: 'authorization_code',
-    });
-
-    const { access_token } = data;
-
-   
-    const { data: profile } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
-
+    // Verify idToken with Google
+    const { data: profile } = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
     let user = await Profile.findOne({ email: profile.email });
+    
     if (!user) {
       user = new Profile({
         fullName: profile.name,
@@ -54,7 +36,14 @@ exports.googleCallback = async (req, res) => {
       await user.save();
     }
 
-    
+    // Retrieve or create associated client info
+    let client = await Client.findOne({ profileId: user._id });
+    if (!client) {
+      client = new Client({ profileId: user._id });
+      await client.save();
+    }
+
+    // Generate and send JWT
     const token = jwt.sign(
       {
         id: user._id,
@@ -66,13 +55,25 @@ exports.googleCallback = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.status(200).json({ token, ok: true });
+    res.status(200).json({
+      token,
+      ok: true,
+      client: {
+        id: client._id,
+        favorites: client.favorites,
+        recent_search: client.recent_search,
+        location: client.location,
+        lat_long: client.lat_long,
+        blocked: client.blocked,
+        block_reason: client.block_reason,
+        blocked_at: client.blocked_at,
+      }
+    });
   } catch (error) {
     console.error('Google Authentication Error:', error.response?.data?.error || error.message);
     res.status(500).json(createErrorResponse('Server error', 500)); 
   }
 };
-
 
 exports.register = async (req, res) => {
   console.time('Registration Time'); // Start timing
@@ -148,6 +149,11 @@ exports.login = async (req, res) => {
     if (!isValidPassword) {
       return res.status(400).json(createErrorResponse('Invalid email or password', 400));
     }
+    const client = await Client.findOne({ profileId: profile._id });
+    if (!client) {
+      return res.status(404).json(createErrorResponse('Client information not found', 404));
+    }
+
 
     const token = jwt.sign(
       {
@@ -161,7 +167,21 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.status(200).json({ token, ok: true });
+    res.status(200).json({
+      token,
+      ok: true,
+      client: {
+        id: client._id,
+        favorites: client.favorites,
+        recent_search: client.recent_search,
+        location: client.location,
+        lat_long: client.lat_long,
+        blocked: client.blocked,
+        block_reason: client.block_reason,
+        blocked_at: client.blocked_at,
+      }
+    });
+
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json(createErrorResponse('Server error', 500));
