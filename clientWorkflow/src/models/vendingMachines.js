@@ -1,10 +1,21 @@
 // models/VendingMachine.js
+const { required } = require('joi');
 const mongoose = require('mongoose');
 
 const vendingMachineSchema = new mongoose.Schema({
   location: {
     type: String, 
     required: true,
+  },
+  blocked : {
+    type: Boolean,
+    required : true,
+    default : false
+  },
+  open: {
+    type: [String],
+    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    default: [],
   },
   position: {
     lat: {

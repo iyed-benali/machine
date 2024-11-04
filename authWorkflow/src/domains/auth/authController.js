@@ -10,6 +10,7 @@ const { generateAndHashOTP } = require('../../utils/generateOtp.js');
 require('dotenv').config();
 const { createErrorResponse } = require('../../utils/errorHandle.js');
 const Cient = require('../../../../clientWorkflow/src/models/client.js')
+const mongoose = require('mongoose')
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -55,6 +56,8 @@ exports.googleLogin = async (req, res) => {
       { expiresIn: '1h' }
     );
 
+    
+    
     res.status(200).json({
       token,
       ok: true,
@@ -80,22 +83,18 @@ exports.googleLogin = async (req, res) => {
 };
 
 exports.register = async (req, res) => {
-  console.time('Registration Time'); // Start timing
-
   try {
     const { fullName, email, password, role } = req.body;
 
     // Validate input data
     const { error } = registerSchema.validate({ fullName, email, password });
     if (error) {
-      console.timeEnd('Registration Time'); // End timing on error
       return res.status(400).json(createErrorResponse(error.details[0].message, 400));
     }
 
     // Check if the email already exists
     const existingUser = await Profile.findOne({ email });
     if (existingUser) {
-      console.timeEnd('Registration Time'); // End timing on error
       return res.status(400).json(createErrorResponse('Email already registered', 400));
     }
 
@@ -109,7 +108,7 @@ exports.register = async (req, res) => {
       favorites: [],
       recent_search: [],
       location: '',
-      lat_long: [],
+      lat_long: { lat: 0, long: 0 },
       blocked: false,
       block_reason: '',
       blocked_at: null,
@@ -129,8 +128,6 @@ exports.register = async (req, res) => {
   } catch (error) {
     console.error('Registration error:', error.message);
     res.status(500).json(createErrorResponse('Server error', 500));
-  } finally {
-    console.timeEnd('Registration Time'); 
   }
 };
 
