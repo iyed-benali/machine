@@ -63,12 +63,16 @@ exports.googleLogin = async (req, res) => {
         favorites: client.favorites,
         recent_search: client.recent_search,
         location: client.location,
-        lat_long: client.lat_long,
+        lat_long: {
+          lat: client.lat_long.lat,
+          long: client.lat_long.long
+        },
         blocked: client.blocked,
         block_reason: client.block_reason,
         blocked_at: client.blocked_at,
       }
     });
+    
   } catch (error) {
     console.error('Google Authentication Error:', error.response?.data?.error || error.message);
     res.status(500).json(createErrorResponse('Server error', 500)); 

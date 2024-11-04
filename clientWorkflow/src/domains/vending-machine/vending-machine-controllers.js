@@ -116,3 +116,13 @@ exports.searchVendingMachines = async (req, res) => {
     }
   };
   
+  exports.getAllVendingMachineCoordinates = async (req, res) => {
+    try {
+      const coordinates = await VendingMachine.find({}, 'position');
+      res.status(200).json({ coordinates });
+    } catch (error) {
+      console.error('Error fetching vending machine coordinates:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+  

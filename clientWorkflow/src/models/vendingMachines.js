@@ -7,8 +7,14 @@ const vendingMachineSchema = new mongoose.Schema({
     required: true,
   },
   position: {
-    type: [Number], 
-    required: true,
+    lat: {
+      type: Number,
+      required: true,
+    },
+    long: {
+      type: Number,
+      required: true,
+    },
   },
   categories: [
     {

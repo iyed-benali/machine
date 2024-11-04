@@ -19,9 +19,18 @@ const clientSchema = new mongoose.Schema({
       default: '',
     },
     lat_long: {
-      type: [Number], 
-      default: [],
-    },
+      type: {
+          lat: {
+              type: Number,
+              required: true,
+          },
+          long: {
+              type: Number,
+              required: true,
+          },
+      },
+      default: { lat: 0, long: 0 },
+  },
     blocked: {
       type: Boolean,
       default: false,

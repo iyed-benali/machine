@@ -10,5 +10,7 @@ router.get('/vending-machines/:id', vendingMachineController.getVendingMachineBy
 router.put('/vending-machines/:id', vendingMachineController.updateVendingMachine);
 router.delete('/vending-machines/:id', vendingMachineController.deleteVendingMachine);
 router.get('/search', vendingMachineController.searchVendingMachines);
+router.get('/coordinates', vendingMachineController.getAllVendingMachineCoordinates);
+
 
 module.exports = router;
