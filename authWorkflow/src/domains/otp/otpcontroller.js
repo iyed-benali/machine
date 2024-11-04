@@ -3,7 +3,7 @@ const { OTP } = require('../../models/otp');
 const Profile = require('../../models/Profile');
 const mailSender = require('../../utils/mailsender');
 const bcrypt = require('bcrypt');
-const { generateAndHashOTP } = require('../../utils/generateOtp');
+const { generateAndHashOTP } = require('../../utils/generateOtp.js');
 const { createErrorResponse } = require('../../utils/errorHandle.js');
 
 exports.verifyOTP = async (req, res) => {
@@ -26,27 +26,48 @@ exports.verifyOTP = async (req, res) => {
 
 exports.resendOTP = async (req, res) => {
   try {
+    console.log('Request Body:', req.body)
     const { email } = req.body;
     const user = await Profile.findOne({ email });
     if (!user) return res.status(404).json(createErrorResponse('User not found', 404));
 
-    await OTP.deleteMany({ userId: user._id, type: 'emailVerification' });
+    console.log('User ID:', user._id);
+
+    // Check for existing OTP records before deletion
+    const existingOtps = await OTP.find({ userId: user._id, type: 'emailVerification' });
+    if (existingOtps.length > 0) {
+      const deleteResult = await OTP.deleteMany({ userId: user._id, type: 'emailVerification' });
+      console.log('Deleted OTP records:', deleteResult.deletedCount);
+    } else {
+      console.log('No existing OTP records found for deletion.');
+    }
 
     const { otp, hashedOtp } = await generateAndHashOTP();
+    console.log('Generated OTP:', otp, 'Hashed OTP:', hashedOtp);
+
     const newOtpRecord = new OTP({
       userId: user._id,
       otp: hashedOtp,
+      email:email,
       createdAt: Date.now(),
       type: 'emailVerification',
     });
 
     await newOtpRecord.save();
-    await mailSender(email, 'Your OTP', `<h1>Your OTP is: ${otp}</h1>`);
+
+    await mailSender(email, 'Your OTP', `<h1>Your OTP is: ${otp}</h1>`)
+      .catch(mailError => {
+        console.error('Error sending OTP email:', mailError);
+        return res.status(500).json(createErrorResponse('Error sending email', 500));
+      });
+
     res.status(200).json({ ok: true, message: 'OTP resent successfully' });
   } catch (error) {
+    console.error('Error in resendOTP:', error); // Log the error
     res.status(500).json(createErrorResponse('Server error', 500));
   }
 };
+
 
 exports.requestPasswordReset = async (req, res) => {
   try {
