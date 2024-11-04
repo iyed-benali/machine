@@ -1,7 +1,7 @@
-const Profile = require('../../models/Profile.js');
-const Client = require ('../../../../clientWorkflow/src/models/client.js')
+const Profile = require('../../models/Profile/Profile.js');
+const Client = require ('../../models/Client/client.js')
 const jwt = require('jsonwebtoken');
-const { OTP, sendVerificationEmail } = require('../../models/otp.js');
+const { OTP, sendVerificationEmail } = require('../../models/OTP/otp.js');
 const { OAuth2Client } = require('google-auth-library');
 const bcrypt = require('bcrypt');
 const { registerSchema } = require('../../utils/validators'); 
@@ -9,7 +9,7 @@ const axios = require('axios');
 const { generateAndHashOTP } = require('../../utils/generateOtp.js');
 require('dotenv').config();
 const { createErrorResponse } = require('../../utils/errorHandle.js');
-const Cient = require('../../../../clientWorkflow/src/models/client.js')
+const Cient = require('../../models/Client/client.js')
 const mongoose = require('mongoose')
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -55,6 +55,7 @@ exports.googleLogin = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
+    
 
     
     

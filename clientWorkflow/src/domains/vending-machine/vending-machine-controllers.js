@@ -1,11 +1,11 @@
 
-const VendingMachine = require('../../models/vendingMachines')
-const Product = require('../../models/products')
-const SubCategory = require('../../models/subCategories')
-const Category = require('../../models/categories')
+const VendingMachine = require('../../../../authWorkflow/src/models/Vending-Machines/vendingMachines')
+const Product = require('../../../../authWorkflow/src/models/Products/products')
+const SubCategory = require('../../../../authWorkflow/src/models/Sub-Categories/subCategories')
+const Category = require('../../../../authWorkflow/src/models/Categories/categories')
 const { createErrorResponse } = require('../../../../authWorkflow/src/utils/errorHandle'); 
-// const updateRecentSearch = require('../client/client-controller')
-const Client = require('../../models/client')
+
+const Client = require('../../../../authWorkflow/src/models/Client/client')
 
 const updateRecentSearch = async (clientId, searchTerm) => {
     try {
@@ -90,6 +90,7 @@ exports.deleteVendingMachine = async (req, res) => {
 
 exports.searchVendingMachines = async (req, res) => {
   const { searchTerm, clientId } = req.query;
+ 
   
   // Validate input
   if (!searchTerm || !clientId) {
@@ -97,18 +98,29 @@ exports.searchVendingMachines = async (req, res) => {
   }
 
   try {
+    console.log("fff");
     // Update recent search for the client
-    await updateRecentSearch(clientId, searchTerm);
+    try {
+      await updateRecentSearch(clientId, searchTerm);
+    } catch (error) {
+      console.error("Error updating recent search:", error);
+      return res.status(500).json({ message: 'Error updating recent search', error });
+    }
+    let categories, subCategories, products;
+try {
+  categories = await Category.find({ title: new RegExp(searchTerm, 'i') });
+  subCategories = await SubCategory.find({ title: new RegExp(searchTerm, 'i') });
+  products = await Product.find({
+    $or: [
+      { name: new RegExp(searchTerm, 'i') },
+      { subName: new RegExp(searchTerm, 'i') }
+    ]
+  });
+} catch (error) {
+  console.error("Error finding search results:", error);
+  return res.status(500).json({ message: 'Error retrieving categories, subcategories, or products', error });
+}
 
-    // Find related categories, subcategories, and products
-    const categories = await Category.find({ title: new RegExp(searchTerm, 'i') });
-    const subCategories = await SubCategory.find({ title: new RegExp(searchTerm, 'i') });
-    const products = await Product.find({
-      $or: [
-        { name: new RegExp(searchTerm, 'i') },
-        { subName: new RegExp(searchTerm, 'i') }
-      ]
-    });
 
     // Collect IDs for search criteria
     const categoryIds = categories.map(cat => cat._id);
@@ -117,7 +129,7 @@ exports.searchVendingMachines = async (req, res) => {
 
     // Find vending machines matching criteria and not blocked
     const vendingMachines = await VendingMachine.find({
-      ...req.unblockedFilter, // Include filter for unblocked machines
+      ...req.unblockedFilter, 
       $or: [
         { categories: { $in: categoryIds } },
         { subCategories: { $in: subCategoryIds } },
@@ -133,7 +145,9 @@ exports.searchVendingMachines = async (req, res) => {
  
   exports.getAllVendingMachineCoordinates = async (req, res) => {
     try {
-      const coordinates = await VendingMachine.find({}, 'position');
+      const coordinates = await VendingMachine.find({}, 'position')
+     
+
       res.status(200).json({ coordinates });
     } catch (error) {
       console.error('Error fetching vending machine coordinates:', error);

@@ -19,7 +19,7 @@ router.delete('/:id', subCategoryController.deleteSubCategory);
 router.get('/category/:categoryId', subCategoryController.getSubCategoriesByCategoryId);
 
 
-router.get('/subcategories/type/:type', subCategoryController.getSubCategoriesByType);
+router.get('/type/:type', subCategoryController.getSubCategoriesByType);
 
 
 module.exports = router;

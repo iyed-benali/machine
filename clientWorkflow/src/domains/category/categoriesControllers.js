@@ -1,8 +1,10 @@
-const Category = require('../../models/categories');
+const Category = require('../../../../authWorkflow/src/models/Categories/categories');
 const { createErrorResponse } = require('../../../../authWorkflow/src/utils/errorHandle'); 
 exports.createCategory = async (req, res) => {
   try {
     const newCategory = new Category(req.body);
+    console.log(req.body);
+    
     await newCategory.save();
     res.status(201).json({ message: 'Category created successfully', category: newCategory });
   } catch (error) {

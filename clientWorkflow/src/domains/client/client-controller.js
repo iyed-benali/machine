@@ -1,4 +1,4 @@
-const Client = require('../../models/client');
+const Client = require('../../../../authWorkflow/src/models/Client/client');
 
 exports.updateRecentSearch = async (clientId, searchTerm) => {
     try {
@@ -31,8 +31,7 @@ exports.deleteSearchByName = async (req, res) => {
   const { clientId, name } = req.params;
   
   try {
-    console.log(name,"name")
-    console.log(clientId,'id');
+   
       const result = await Client.updateOne(
           { _id: clientId },
           { $pull: { recent_search: name } } 

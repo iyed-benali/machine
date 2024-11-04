@@ -1,6 +1,6 @@
 // controllers/productController.js
-const Product = require('../../models/products');
-const VendingMachine = require('../../models/vendingMachines');
+const Product = require('../../../../authWorkflow/src/models/Products/products');
+const VendingMachine = require('../../../../authWorkflow/src/models/Vending-Machines/vendingMachines');
 const { createErrorResponse } = require('../../../../authWorkflow/src/utils/errorHandle'); 
 
 // Create a new product

@@ -1,6 +1,6 @@
 const otpGenerator = require('otp-generator');
-const { OTP } = require('../../models/otp');
-const Profile = require('../../models/Profile');
+const { OTP } = require('../../models/OTP/otp.js');
+const Profile = require('../../models/Profile/Profile.js');
 const mailSender = require('../../utils/mailsender');
 const bcrypt = require('bcrypt');
 const { generateAndHashOTP } = require('../../utils/generateOtp.js');
