@@ -1,4 +1,4 @@
-const Client = require('../../../../authWorkflow/src/models/Client/client');
+const Client = require('../../models/Client/client');
 
 exports.updateRecentSearch = async (clientId, searchTerm) => {
     try {

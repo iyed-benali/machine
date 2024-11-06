@@ -1,5 +1,5 @@
-const Category = require('../../../../authWorkflow/src/models/Categories/categories');
-const { createErrorResponse } = require('../../../../authWorkflow/src/utils/errorHandle'); 
+const Category = require('../../models/Categories/categories');
+const { createErrorResponse } = require('../../utils/errorHandle'); 
 exports.createCategory = async (req, res) => {
   try {
     const newCategory = new Category(req.body);

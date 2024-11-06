@@ -1,13 +1,11 @@
 
-const SubCategory = require('../../../../authWorkflow/src/models/Sub-Categories/subCategories');
-const { createErrorResponse } = require('../../../../authWorkflow/src/utils/errorHandle'); 
+const SubCategory = require('../../models/Sub-Categories/subCategories');
+const { createErrorResponse } = require('../../utils/errorHandle'); 
 
 
 exports.createSubCategory = async (req, res) => {
   try {
     const newSubCategory = new SubCategory(req.body);
-    // console.log(newSubCategory);
-    
     await newSubCategory.save();
     res.status(201).json({ message: 'SubCategory created successfully', subCategory: newSubCategory });
   } catch (error) {

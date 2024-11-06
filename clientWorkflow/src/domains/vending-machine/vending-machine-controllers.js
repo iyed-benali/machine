@@ -1,11 +1,11 @@
 
-const VendingMachine = require('../../../../authWorkflow/src/models/Vending-Machines/vendingMachines')
-const Product = require('../../../../authWorkflow/src/models/Products/products')
-const SubCategory = require('../../../../authWorkflow/src/models/Sub-Categories/subCategories')
-const Category = require('../../../../authWorkflow/src/models/Categories/categories')
-const { createErrorResponse } = require('../../../../authWorkflow/src/utils/errorHandle'); 
+const VendingMachine = require('../../models/Vending-Machines/vendingMachines')
+const Product = require('../../models/Products/products')
+const SubCategory = require('../../models/Sub-Categories/subCategories')
+const Category = require('../../models/Categories/categories')
+const { createErrorResponse } = require('../../utils/errorHandle'); 
 
-const Client = require('../../../../authWorkflow/src/models/Client/client')
+const Client = require('../../models/Client/client')
 
 const updateRecentSearch = async (clientId, searchTerm) => {
     try {

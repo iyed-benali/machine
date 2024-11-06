@@ -1,5 +1,5 @@
 
-const VendingMachine = require('../../../authWorkflow/src/models/Vending-Machines/vendingMachines');
+const VendingMachine = require('../models/Vending-Machines/vendingMachines');
 
 
 const filterUnblocked = async (req, res, next) => {
