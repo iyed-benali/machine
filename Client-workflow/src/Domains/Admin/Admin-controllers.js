@@ -15,8 +15,6 @@ exports.createAdmin = async (req, res) => {
 
     const profile = new Profile(profileData);
     await profile.save();
-
-    
     const adminData = {
       fullName: req.body.fullName,
       email: req.body.email,

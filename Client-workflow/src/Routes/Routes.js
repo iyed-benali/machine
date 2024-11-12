@@ -1,4 +1,3 @@
-// routes.js
 const express = require('express');
 const categories = require('../Domains/Category/Categories-routes');
 const subCategories = require('../Domains/Sub-categories/Subcategories-routes');

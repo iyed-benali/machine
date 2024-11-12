@@ -1,5 +1,5 @@
 
-const VendingMachine = require('../../models/Vending-Machines/Vending-machines')
+const VendingMachine = require('../../Models/Vending-Machines/Vending-machines')
 const Product = require('../../Models/Products/Products')
 const SubCategory = require('../../Models/Sub-Categories/subCategories')
 const Category = require('../../Models/Categories/Categories')

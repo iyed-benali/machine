@@ -9,6 +9,7 @@ const axios = require('axios');
 const { generateAndHashOTP } = require('../../Utils/Generate-otp.js');
 require('dotenv').config();
 const { createErrorResponse } = require('../../Utils/Error-handle.js');
+const VendingMachineOwner = require('../../Models/Vending-machine-owner/Vending-machine-owner.js')
 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -21,7 +22,7 @@ exports.googleLogin = async (req, res) => {
   const { idToken } = req.body;
 
   try {
-    // Verify idToken with Google
+
     const { data: profile } = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
     let user = await Profile.findOne({ email: profile.email });
     
@@ -54,10 +55,6 @@ exports.googleLogin = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
-    
-
-    
-    
     res.status(200).json({
       token,
       ok: true,
@@ -86,7 +83,6 @@ exports.register = async (req, res) => {
   try {
     const { fullName, email, password, role } = req.body;
 
-    // Validate input data
     const { error } = registerSchema.validate({ fullName, email, password });
     if (error) {
       return res.status(400).json(createErrorResponse(error.details[0].message, 400));
@@ -103,7 +99,6 @@ exports.register = async (req, res) => {
     await profile.save();
 
     if (role === 'user') {
-      // Create a new client associated with the profile
       const client = new Client({
         profileId: profile._id,
         favorites: [],
@@ -148,6 +143,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Find the profile by email
     const profile = await Profile.findOne({ email });
     if (!profile) {
       return res.status(400).json(createErrorResponse('Invalid email or password', 400));
@@ -157,16 +153,52 @@ exports.login = async (req, res) => {
       return res.status(403).json(createErrorResponse('Account not verified. Please verify your account.', 403));
     }
 
+    // Verify password
     const isValidPassword = await profile.isPasswordValid(password);
     if (!isValidPassword) {
       return res.status(400).json(createErrorResponse('Invalid email or password', 400));
     }
-    const client = await Client.findOne({ profileId: profile._id });
-    if (!client) {
-      return res.status(404).json(createErrorResponse('Client information not found', 404));
+
+    // Initialize variables for role-specific data
+    let roleData = {};
+
+    // Fetch additional data based on role
+    if (profile.role === 'client') {
+      const client = await Client.findOne({ profileId: profile._id });
+      if (!client) {
+        return res.status(404).json(createErrorResponse('Client information not found', 404));
+      }
+      roleData = {
+        id: client._id,
+        favorites: client.favorites,
+        recent_search: client.recent_search,
+        location: client.location,
+        lat_long: client.lat_long,
+        blocked: client.blocked,
+        block_reason: client.block_reason,
+        blocked_at: client.blocked_at,
+      };
+    } else if (profile.role === 'machine owner') {
+      const owner = await VendingMachineOwner.findOne({ email: profile.email }); // Assuming VendingMachineOwner is matched by email
+      if (!owner) {
+        return res.status(404).json(createErrorResponse('Vending Machine Owner information not found', 404));
+      }
+      roleData = {
+        id: owner._id,
+        vendingMachines: owner.vendingMachines, // Include vending machine list or relevant details
+      };
+    } else if (profile.role === 'admin') {
+      const admin = await Admin.findOne({ email: profile.email }); // Assuming Admin is matched by email
+      if (!admin) {
+        return res.status(404).json(createErrorResponse('Admin information not found', 404));
+      }
+      roleData = {
+        id: admin._id,
+        permissions: admin.permissions, // Include permissions or relevant details for admin
+      };
     }
 
-
+    // Create JWT token
     const token = jwt.sign(
       {
         id: profile._id,
@@ -179,19 +211,18 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' }
     );
 
+    // Respond with token and role-specific data
     res.status(200).json({
       token,
       ok: true,
-      client: {
-        id: client._id,
-        favorites: client.favorites,
-        recent_search: client.recent_search,
-        location: client.location,
-        lat_long: client.lat_long,
-        blocked: client.blocked,
-        block_reason: client.block_reason,
-        blocked_at: client.blocked_at,
-      }
+      role: profile.role,
+      profile: {
+        id: profile._id,
+        name: profile.fullName,
+        email: profile.email,
+        role: profile.role,
+        ...roleData
+      },
     });
 
   } catch (error) {

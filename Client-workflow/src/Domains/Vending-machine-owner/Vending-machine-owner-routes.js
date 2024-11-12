@@ -5,7 +5,7 @@ const vendingMachineOwnerController = require('./Vending-machine-owner-controlle
 const router = express.Router();
 
 
-router.get('/owner/:ownerId', vendingMachineOwnerController.getVendingMachinesByOwner)
+router.get('/:ownerId', vendingMachineOwnerController.getVendingMachinesByOwner)
 router.post('/owner/:ownerId', vendingMachineOwnerController.createProduct)
 router.delete('/remove/:vendingMachineId/:productId', vendingMachineOwnerController.removeProductFromVendingMachine);
 
