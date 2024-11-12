@@ -1,6 +1,6 @@
 // controllers/productController.js
 const Product = require('../../Models/Products/Products');
-const VendingMachine = require('../../models/Vending-Machines/Vending-machines');
+const VendingMachine = require('../../Models/Vending-Machines/Vending-machines');
 const { createErrorResponse } = require('../../Utils/Error-handle'); 
 
 // Create a new product

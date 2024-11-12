@@ -25,7 +25,7 @@ const vendingMachineOwnerSchema = new mongoose.Schema({
   ]
 }, { timestamps: true });
 
-// Hash the password before saving
+
 vendingMachineOwnerSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);

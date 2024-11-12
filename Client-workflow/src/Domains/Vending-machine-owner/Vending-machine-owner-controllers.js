@@ -1,45 +1,85 @@
 // controllers/vendingMachineOwnerController.js
 
 const VendingMachineOwner = require('../../Models/Vending-machine-owner/Vending-machine-owner');
-const Profile = require('../../Models/Profile/Profile');
+const Product = require('../../Models/Products/Products')
+const VendingMachine = require('../../Models/Vending-Machines/Vending-machines')
 const createErrorResponse = require('../../Utils/Error-handle');
 
-exports.createVendingMachineOwner = async (req, res) => {
-  try {
-    const { fullName, email, password } = req.body;
 
-    const existingProfile = await Profile.findOne({ email });
-    if (existingProfile) {
-      return res.status(400).json({ message: 'Email is already registered' });
-    }
+
+exports.getVendingMachinesByOwner = async (req, res) => {
+  try {
+    const { ownerId } = req.params;
 
   
-    const newProfile = new Profile({
-      fullName,
-      email,
-      password, 
-      role: 'machine owner'
-    });
-    await newProfile.save();
+    const vendingMachines = await VendingMachine.find({ owner: ownerId });
 
-   
-    const newOwner = new VendingMachineOwner({
-      fullName,
-      email,
-      vendingMachines: [], 
+    if (!vendingMachines.length) {
+      return res.status(404).json({ message: 'No vending machines found for this owner' });
+    }
+
+    res.status(200).json({ message: 'Vending machines retrieved successfully', vendingMachines });
+  } catch (error) {
+    console.error('Error retrieving vending machines:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+exports.createProduct = async (req, res) => {
+  try {
+    const { name, subName, price, image, category, vendingMachineId } = req.body;
+
+    // Validate required fields
+    if (!name || !subName || !price || !image || !category || !vendingMachineId) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+
+    // Create a new product
+    const newProduct = new Product({
+      name,
+      subName,
+      price,
+      image,
+      category,
     });
-    await newOwner.save();
+
+    await newProduct.save();
+    const vendingMachine = await VendingMachine.findById(vendingMachineId);
+    if (!vendingMachine) {
+      return res.status(404).json({ message: 'Vending Machine not found' });
+    }
+
+    vendingMachine.products.push(newProduct._id);
+    await vendingMachine.save();
 
     res.status(201).json({
-      message: 'Vending Machine Owner created successfully',
-      owner: {
-        id: newOwner._id,
-        fullName: newOwner.fullName,
-        email: newOwner.email,
-        profileId: newProfile._id,
-      }
+      message: 'Product created and added to vending machine successfully',
+      product: newProduct,
     });
   } catch (error) {
-    res.status(500).json(createErrorResponse('Server error', 500));
+    console.error('Error creating product:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+exports.removeProductFromVendingMachine = async (req, res) => {
+  try {
+    const { vendingMachineId, productId } = req.params;
+    const vendingMachine = await VendingMachine.findById(vendingMachineId);
+    if (!vendingMachine) {
+      return res.status(404).json({ message: 'Vending Machine not found' });
+    }
+    const productIndex = vendingMachine.products.indexOf(productId);
+    if (productIndex === -1) {
+      return res.status(404).json({ message: 'Product not found in this vending machine' });
+    }
+    vendingMachine.products.splice(productIndex, 1);
+    await vendingMachine.save();
+    await Product.findByIdAndRemove(productId);
+
+    res.status(200).json({ message: 'Product removed from vending machine successfully' });
+  } catch (error) {
+    console.error('Error removing product from vending machine:', error.message);
+    res.status(500).json({ message: 'Server error' });
   }
 };
