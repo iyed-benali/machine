@@ -171,7 +171,7 @@ exports.login = async (req, res) => {
     } else if (userRole === 'machine owner') {
       user = await VendingMachineOwner.findOne({ profileId: profile._id });
       if (user) {
-        userId = user._id; // VendingMachineOwner ID
+        userId = user._id;
       }
     }
 
@@ -179,11 +179,11 @@ exports.login = async (req, res) => {
       return res.status(404).json(createErrorResponse('User role not found', 404));
     }
 
-    // Generate JWT token
+    
     const token = jwt.sign(
       {
         profileId: profile._id,
-        userId: userId,  // Either adminId or ownerId
+        userId: userId,  
         role: profile.role,
         source: profile.source,
       },
@@ -193,12 +193,7 @@ exports.login = async (req, res) => {
 
     res.status(200).json({
       token,
-      ok: true,
-      user: {
-        profileId: profile._id,
-        userId,  // adminId or ownerId
-        role: profile.role,
-      }
+      ok: true
     });
 
   } catch (error) {

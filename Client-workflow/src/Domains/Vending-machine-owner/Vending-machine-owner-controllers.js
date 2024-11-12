@@ -4,7 +4,8 @@ const VendingMachineOwner = require('../../Models/Vending-machine-owner/Vending-
 const Product = require('../../Models/Products/Products')
 const VendingMachine = require('../../Models/Vending-Machines/Vending-machines')
 const createErrorResponse = require('../../Utils/Error-handle');
-
+const Category = require('../../Models/Categories/Categories')
+const SubCategory= require('../../Models/Sub-Categories/subCategories')
 
 
 exports.getVendingMachinesByOwner = async (req, res) => {
@@ -80,6 +81,74 @@ exports.removeProductFromVendingMachine = async (req, res) => {
     res.status(200).json({ message: 'Product removed from vending machine successfully' });
   } catch (error) {
     console.error('Error removing product from vending machine:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+exports.createSubCategoryAndAddToVendingMachine = async (req, res) => {
+  try {
+    const { vendingMachineId, title, categoryId, bgColor, borderColor, blur, imageUrl, type } = req.body; 
+
+    // Find the vending machine by ID
+    const vendingMachine = await VendingMachine.findById(vendingMachineId);
+    if (!vendingMachine) {
+      return res.status(404).json({ message: 'Vending machine not found' });
+    }
+
+    // Create the subcategory using the data sent in the request body
+    const newSubCategory = new SubCategory({
+      title,
+      categoryId,
+      bgColor,
+      borderColor,
+      blur,
+      imageUrl,
+      type
+    });
+
+   
+    await newSubCategory.save();
+
+    
+    vendingMachine.subCategories.push(newSubCategory._id);
+
+    
+    await vendingMachine.save();
+
+    res.status(200).json({ message: 'Subcategory created and added to vending machine successfully', newSubCategory });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+exports.createCategoryAndAddToVendingMachine = async (req, res) => {
+  try {
+    const { vendingMachineId, title, bgColor, radiusColor, blur, imageUrl, type } = req.body; 
+
+    // Find the vending machine by ID
+    const vendingMachine = await VendingMachine.findById(vendingMachineId);
+    if (!vendingMachine) {
+      return res.status(404).json({ message: 'Vending machine not found' });
+    }
+
+    // Create the category using the data sent in the request body
+    const newCategory = new Category({
+      title,
+      bgColor,
+      radiusColor,
+      blur,
+      imageUrl,
+      type
+    });
+
+
+    await newCategory.save();
+    vendingMachine.categories.push(newCategory._id);
+
+    await vendingMachine.save();
+
+    res.status(200).json({ message: 'Category created and added to vending machine successfully', newCategory });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
