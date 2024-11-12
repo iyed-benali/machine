@@ -111,11 +111,11 @@ exports.register = async (req, res) => {
       });
       await client.save();
     } else if (role === 'machine owner') {
-      // Create a new vending machine owner associated with the profile
       const vendingMachineOwner = new VendingMachineOwner({
+        profileId:profile._id,
         fullName,
         email,
-        vendingMachines: [], // Initialize with an empty array for vending machines
+        vendingMachines: [],
       });
       await vendingMachineOwner.save();
     }
@@ -143,7 +143,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find the profile by email
+    // Check if the user exists in Profile
     const profile = await Profile.findOne({ email });
     if (!profile) {
       return res.status(400).json(createErrorResponse('Invalid email or password', 400));
@@ -153,57 +153,37 @@ exports.login = async (req, res) => {
       return res.status(403).json(createErrorResponse('Account not verified. Please verify your account.', 403));
     }
 
-    // Verify password
     const isValidPassword = await profile.isPasswordValid(password);
     if (!isValidPassword) {
       return res.status(400).json(createErrorResponse('Invalid email or password', 400));
     }
 
-    // Initialize variables for role-specific data
-    let roleData = {};
+    // Check if the user is an Admin or Machine Owner
+    let user = null;
+    let userRole = profile.role;
+    let userId = null;
 
-    // Fetch additional data based on role
-    if (profile.role === 'client') {
-      const client = await Client.findOne({ profileId: profile._id });
-      if (!client) {
-        return res.status(404).json(createErrorResponse('Client information not found', 404));
+    if (userRole === 'admin') {
+      user = await Admin.findOne({ profileId: profile._id });
+      if (user) {
+        userId = user._id; // Admin ID
       }
-      roleData = {
-        id: client._id,
-        favorites: client.favorites,
-        recent_search: client.recent_search,
-        location: client.location,
-        lat_long: client.lat_long,
-        blocked: client.blocked,
-        block_reason: client.block_reason,
-        blocked_at: client.blocked_at,
-      };
-    } else if (profile.role === 'machine owner') {
-      const owner = await VendingMachineOwner.findOne({ email: profile.email }); // Assuming VendingMachineOwner is matched by email
-      if (!owner) {
-        return res.status(404).json(createErrorResponse('Vending Machine Owner information not found', 404));
+    } else if (userRole === 'machine owner') {
+      user = await VendingMachineOwner.findOne({ profileId: profile._id });
+      if (user) {
+        userId = user._id; // VendingMachineOwner ID
       }
-      roleData = {
-        id: owner._id,
-        vendingMachines: owner.vendingMachines, // Include vending machine list or relevant details
-      };
-    } else if (profile.role === 'admin') {
-      const admin = await Admin.findOne({ email: profile.email }); // Assuming Admin is matched by email
-      if (!admin) {
-        return res.status(404).json(createErrorResponse('Admin information not found', 404));
-      }
-      roleData = {
-        id: admin._id,
-        permissions: admin.permissions, // Include permissions or relevant details for admin
-      };
     }
 
-    // Create JWT token
+    if (!user) {
+      return res.status(404).json(createErrorResponse('User role not found', 404));
+    }
+
+    // Generate JWT token
     const token = jwt.sign(
       {
-        id: profile._id,
-        name: profile.fullName,
-        email: profile.email,
+        profileId: profile._id,
+        userId: userId,  // Either adminId or ownerId
         role: profile.role,
         source: profile.source,
       },
@@ -211,18 +191,14 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    // Respond with token and role-specific data
     res.status(200).json({
       token,
       ok: true,
-      role: profile.role,
-      profile: {
-        id: profile._id,
-        name: profile.fullName,
-        email: profile.email,
+      user: {
+        profileId: profile._id,
+        userId,  // adminId or ownerId
         role: profile.role,
-        ...roleData
-      },
+      }
     });
 
   } catch (error) {

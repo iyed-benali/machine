@@ -45,5 +45,4 @@ const vendingMachineSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.models.VendingMachine|| mongoose.model('VendingMachine', vendingMachineSchema)
-
+module.exports = mongoose.model('VendingMachine', vendingMachineSchema);
