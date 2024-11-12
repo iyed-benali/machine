@@ -6,7 +6,7 @@ const vendingMachines = require('../Domains/Vending-machine/VendingMachine-route
 const products = require('../domains/Products/Product-routes');
 const client = require('../domains/Client/Client-route');
 const admin = require('../Domains/Admin/Admin-routes')
-
+const machineOwner = require('../Domains/Vending-machine-owner/Vending-machine-owner-routes')
 const router = express.Router();
 
 router.use('/category', categories); 
@@ -15,5 +15,6 @@ router.use('/vending-machine', vendingMachines);
 router.use('/product', products); 
 router.use('/clients', client);
 router.use('/admin',admin)
+router.use('/owner',machineOwner)
 
 module.exports = router;

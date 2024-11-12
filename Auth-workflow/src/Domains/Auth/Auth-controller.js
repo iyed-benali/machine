@@ -102,23 +102,36 @@ exports.register = async (req, res) => {
     const profile = new Profile({ fullName, email, password, role });
     await profile.save();
 
-    // Create a new client associated with the profile
-    const client = new Client({
-      profileId: profile._id,
-      favorites: [],
-      recent_search: [],
-      location: '',
-      lat_long: { lat: 0, long: 0 },
-      blocked: false,
-      block_reason: '',
-      blocked_at: null,
-    });
-    await client.save();
+    if (role === 'user') {
+      // Create a new client associated with the profile
+      const client = new Client({
+        profileId: profile._id,
+        favorites: [],
+        recent_search: [],
+        location: '',
+        lat_long: { lat: 0, long: 0 },
+        blocked: false,
+        block_reason: '',
+        blocked_at: null,
+      });
+      await client.save();
+    } else if (role === 'machine owner') {
+      // Create a new vending machine owner associated with the profile
+      const vendingMachineOwner = new VendingMachineOwner({
+        fullName,
+        email,
+        vendingMachines: [], // Initialize with an empty array for vending machines
+      });
+      await vendingMachineOwner.save();
+    }
+
+    // Generate and save OTP for email verification
     const { otp, hashedOtp } = await generateAndHashOTP();
     const otpPayload = { email, otp: hashedOtp, type: 'emailVerification', userId: profile._id };
     const data = new OTP(otpPayload);
     await data.save();
 
+    // Send OTP for email verification
     await sendVerificationEmail(email, otp);
     console.log('OTP sent for email verification');
 

@@ -4,7 +4,7 @@ const Product = require('../../Models/Products/Products')
 const SubCategory = require('../../Models/Sub-Categories/subCategories')
 const Category = require('../../Models/Categories/Categories')
 const { createErrorResponse } = require('../../Utils/Error-handle'); 
-
+const VendingMachineOwner = require('../../Models/Vending-machine-owner/Vending-machine-owner')
 const Client = require('../../models/Client/Client')
 
 const updateRecentSearch = async (clientId, searchTerm) => {
@@ -22,38 +22,34 @@ const updateRecentSearch = async (clientId, searchTerm) => {
 
   exports.createVendingMachine = async (req, res) => {
     try {
-      // Create the Profile instance for authentication
-      const profileData = {
-        fullName: req.body.fullName || "Vending Machine",
-        email: req.body.email,
-        password: req.body.password,
-        role: "machine owner" // Assign 'machine owner' role
-      };
+      const { ownerId, location, position, categories, subCategories, products, open } = req.body;
   
-      const profile = new Profile(profileData);
-      await profile.save();
-      const vendingMachineData = {
-        email: req.body.email,
-        password: req.body.password,
-        location: req.body.location,
-        blocked: req.body.blocked || false,
-        open: req.body.open || [],
-        position: {
-          lat: req.body.position.lat,
-          long: req.body.position.long
-        },
-        categories: req.body.categories || [],
-        subCategories: req.body.subCategories || [],
-        products: req.body.products || []
-      };
+      // Find the VendingMachineOwner by ownerId
+      const owner = await VendingMachineOwner.findById(ownerId);
+      if (!owner) {
+        return res.status(404).json({ message: 'Owner not found' });
+      }
   
-      const newVendingMachine = new VendingMachine(vendingMachineData);
+      // Create a new VendingMachine instance
+      const newVendingMachine = new VendingMachine({
+        location,
+        position,
+        categories,
+        subCategories,
+        products,
+        open,
+        owner: ownerId
+      });
+  
       await newVendingMachine.save();
+  
+      
+      owner.vendingMachines.push(newVendingMachine._id);
+      await owner.save();
   
       res.status(201).json({
         message: 'Vending Machine created successfully',
-        vendingMachine: newVendingMachine,
-        profile: profile
+        vendingMachine: newVendingMachine
       });
     } catch (error) {
       res.status(500).json({ message: 'Server error', error });
