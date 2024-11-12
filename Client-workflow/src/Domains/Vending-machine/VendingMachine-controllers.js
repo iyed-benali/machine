@@ -20,15 +20,45 @@ const updateRecentSearch = async (clientId, searchTerm) => {
   };
   
 
-exports.createVendingMachine = async (req, res) => {
-  try {
-    const newVendingMachine = new VendingMachine(req.body);
-    await newVendingMachine.save();
-    res.status(201).json({ message: 'Vending Machine created successfully', vendingMachine: newVendingMachine });
-  } catch (error) {
-    res.status(500).json(createErrorResponse('Server error', 500));
-  }
-};
+  exports.createVendingMachine = async (req, res) => {
+    try {
+      // Create the Profile instance for authentication
+      const profileData = {
+        fullName: req.body.fullName || "Vending Machine",
+        email: req.body.email,
+        password: req.body.password,
+        role: "machine owner" // Assign 'machine owner' role
+      };
+  
+      const profile = new Profile(profileData);
+      await profile.save();
+      const vendingMachineData = {
+        email: req.body.email,
+        password: req.body.password,
+        location: req.body.location,
+        blocked: req.body.blocked || false,
+        open: req.body.open || [],
+        position: {
+          lat: req.body.position.lat,
+          long: req.body.position.long
+        },
+        categories: req.body.categories || [],
+        subCategories: req.body.subCategories || [],
+        products: req.body.products || []
+      };
+  
+      const newVendingMachine = new VendingMachine(vendingMachineData);
+      await newVendingMachine.save();
+  
+      res.status(201).json({
+        message: 'Vending Machine created successfully',
+        vendingMachine: newVendingMachine,
+        profile: profile
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error', error });
+    }
+  };
 
 // Get all vending machines
 exports.getAllVendingMachines = async (req, res) => {

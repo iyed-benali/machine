@@ -1,16 +1,26 @@
 // models/VendingMachine.js
 
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const vendingMachineSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
   location: {
     type: String, 
     required: true,
   },
-  blocked : {
+  blocked: {
     type: Boolean,
-    required : true,
-    default : false
+    required: true,
+    default: false
   },
   open: {
     type: [String],
@@ -47,5 +57,11 @@ const vendingMachineSchema = new mongoose.Schema({
   ],
 }, { timestamps: true });
 
-module.exports = mongoose.models.VendingMachine || mongoose.model('VendingMachine', vendingMachineSchema);
+// Hash the password before saving
+vendingMachineSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 
+module.exports = mongoose.model('VendingMachine', vendingMachineSchema);
