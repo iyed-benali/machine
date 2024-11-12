@@ -51,6 +51,6 @@ otpSchema.pre("save", async function (next) {
 });
 
 module.exports = {
-  OTP: mongoose.models.OTP || mongoose.model("OTP", otpSchema),
+  OTP: mongoose.model("OTP", otpSchema),
   sendVerificationEmail
 };

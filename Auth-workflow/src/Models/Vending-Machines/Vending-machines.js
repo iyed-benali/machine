@@ -5,46 +5,44 @@ const mongoose = require('mongoose');
 const vendingMachineSchema = new mongoose.Schema({
   location: {
     type: String, 
-    required: true,
+    required: true
   },
-  blocked : {
+  blocked: {
     type: Boolean,
-    required : true,
-    default : false
+    default: false
   },
   open: {
     type: [String],
     enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-    default: [],
+    default: []
   },
   position: {
-    lat: {
-      type: Number,
-      required: true,
-    },
-    long: {
-      type: Number,
-      required: true,
-    },
+    lat: { type: Number, required: true },
+    long: { type: Number, required: true }
   },
   categories: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Category',
-    },
+      ref: 'Category'
+    }
   ],
   subCategories: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'SubCategory',
-    },
+      ref: 'SubCategory'
+    }
   ],
   products: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
-    },
+      ref: 'Product'
+    }
   ],
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'VendingMachineOwner',
+    required: true
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('VendingMachine', vendingMachineSchema);
