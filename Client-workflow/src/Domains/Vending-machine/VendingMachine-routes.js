@@ -5,7 +5,7 @@ const vendingMachineController = require('./VendingMachine-controllers');
 const adminCheck = require('../../Middleware/Authorize');
 const filterUnblocked = require('../../Middleware/filter-unblocked')
 
-router.post('/', adminCheck,vendingMachineController.createVendingMachine);
+router.post('/', vendingMachineController.createVendingMachine);
 router.get('/', filterUnblocked,vendingMachineController.getAllVendingMachines);
 router.get('/:id',filterUnblocked, vendingMachineController.getVendingMachineById);
 router.put('/:id', vendingMachineController.updateVendingMachine);

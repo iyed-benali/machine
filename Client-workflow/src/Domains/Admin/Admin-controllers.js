@@ -1,11 +1,9 @@
-// controllers/adminController.js
-
 const Admin = require('../../Models/Admin/Admin');
 const Profile = require('../../Models/Profile/Profile');
 
 exports.createAdmin = async (req, res) => {
   try {
-   
+    // Create and save the profile
     const profileData = {
       fullName: req.body.fullName,
       email: req.body.email,
@@ -15,7 +13,10 @@ exports.createAdmin = async (req, res) => {
 
     const profile = new Profile(profileData);
     await profile.save();
+
+    
     const adminData = {
+      profileId: profile._id,
       fullName: req.body.fullName,
       email: req.body.email,
       password: req.body.password,

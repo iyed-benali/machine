@@ -1,4 +1,4 @@
-// routes/vendingMachineOwnerRoutes.js
+
 
 const express = require('express');
 const vendingMachineOwnerController = require('./Vending-machine-owner-controllers');

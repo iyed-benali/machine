@@ -22,15 +22,19 @@ const updateRecentSearch = async (clientId, searchTerm) => {
 
   exports.createVendingMachine = async (req, res) => {
     try {
-      const { ownerId, location, position, categories, subCategories, products, open } = req.body;
+      const { ownerId, location, position, open } = req.body;
   
-      // Find the VendingMachineOwner by ownerId
+      const categories = req.body.categories || [];
+      const subCategories = req.body.subCategories || [];
+      const products = req.body.products || [];
+  
+      // Verify owner
       const owner = await VendingMachineOwner.findById(ownerId);
       if (!owner) {
         return res.status(404).json({ message: 'Owner not found' });
       }
   
-      // Create a new VendingMachine instance
+      // Create new vending machine instance
       const newVendingMachine = new VendingMachine({
         location,
         position,
@@ -43,7 +47,6 @@ const updateRecentSearch = async (clientId, searchTerm) => {
   
       await newVendingMachine.save();
   
-      
       owner.vendingMachines.push(newVendingMachine._id);
       await owner.save();
   
@@ -55,6 +58,7 @@ const updateRecentSearch = async (clientId, searchTerm) => {
       res.status(500).json({ message: 'Server error', error });
     }
   };
+  
 
 // Get all vending machines
 exports.getAllVendingMachines = async (req, res) => {
