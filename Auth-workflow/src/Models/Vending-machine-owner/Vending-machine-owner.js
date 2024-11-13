@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const vendingMachineOwnerSchema = new mongoose.Schema({
   profileId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Profile', 
+    ref: 'Profile',
     required: true
   },
   fullName: {
@@ -25,6 +25,8 @@ const vendingMachineOwnerSchema = new mongoose.Schema({
     }
   ]
 }, { timestamps: true });
+
+// Hash the password before saving
 vendingMachineOwnerSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
