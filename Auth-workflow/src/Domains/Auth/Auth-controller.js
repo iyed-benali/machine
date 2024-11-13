@@ -1,5 +1,5 @@
 const Profile = require('../../Models/Profile/Profile.js');
-const Client = require ('../../models/Client/Client.js')
+const Client = require ('../../Models/Client/Client.js')
 const jwt = require('jsonwebtoken');
 const { OTP, sendVerificationEmail } = require('../../models/OTP/Otp.js');
 const { OAuth2Client } = require('google-auth-library');
@@ -82,7 +82,6 @@ exports.googleLogin = async (req, res) => {
 exports.register = async (req, res) => {
   try {
     const { fullName, email, password, role } = req.body;
-
     const { error } = registerSchema.validate({ fullName, email, password });
     if (error) {
       return res.status(400).json(createErrorResponse(error.details[0].message, 400));

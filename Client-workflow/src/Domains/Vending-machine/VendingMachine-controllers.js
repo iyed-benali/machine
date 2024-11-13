@@ -22,7 +22,7 @@ const updateRecentSearch = async (clientId, searchTerm) => {
 
   exports.createVendingMachine = async (req, res) => {
     try {
-      const { ownerId, location, position, open } = req.body;
+      const { name,ownerId, location, position, open } = req.body;
   
       const categories = req.body.categories || [];
       const subCategories = req.body.subCategories || [];
@@ -34,8 +34,9 @@ const updateRecentSearch = async (clientId, searchTerm) => {
         return res.status(404).json({ message: 'Owner not found' });
       }
   
-      // Create new vending machine instance
+   
       const newVendingMachine = new VendingMachine({
+        name,
         location,
         position,
         categories,
@@ -60,7 +61,7 @@ const updateRecentSearch = async (clientId, searchTerm) => {
   };
   
 
-// Get all vending machines
+
 exports.getAllVendingMachines = async (req, res) => {
   try {
   
@@ -74,7 +75,7 @@ exports.getAllVendingMachines = async (req, res) => {
   }
 };
 
-// Get a vending machine by ID
+
 exports.getVendingMachineById = async (req, res) => {
   try {
     const vendingMachine = await VendingMachine.findOne({ _id: req.params.id, blocked: false })
@@ -92,7 +93,7 @@ exports.getVendingMachineById = async (req, res) => {
 };
 
 
-// Update a vending machine
+
 exports.updateVendingMachine = async (req, res) => {
   try {
     const vendingMachine = await VendingMachine.findByIdAndUpdate(req.params.id, req.body, { new: true });
