@@ -172,3 +172,54 @@ exports.clearAdminSearchList = async (req, res) => {
     res.status(500).json({ ok: false, message: 'Server error' });
   }
 };
+exports.deleteVendingMachineOwner = async (req, res) => {
+  const { ownerId } = req.params; // ID of the owner to delete
+
+  if (!ownerId) {
+    return res.status(400).json({ ok: false, message: 'Owner ID is required' });
+  }
+
+  try {
+    // Check if the owner exists
+    const owner = await VendingMachineOwner.findById(ownerId);
+    if (!owner) {
+      return res.status(404).json({ ok: false, message: 'Owner not found' });
+    }
+  
+    await owner.remove();
+
+    res.status(200).json({ ok: true, message: 'Vending machine owner deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting vending machine owner:', error.message);
+    res.status(500).json({ ok: false, message: 'Server error' });
+  }
+};
+exports.updateVendingMachineOwner = async (req, res) => {
+  const { ownerId } = req.params; // ID of the owner to update
+  const { fullName, email, vendingMachines } = req.body; // Fields to update
+
+  if (!ownerId) {
+    return res.status(400).json({ ok: false, message: 'Owner ID is required' });
+  }
+
+  try {
+    // Find the owner by ID
+    const owner = await VendingMachineOwner.findById(ownerId);
+    if (!owner) {
+      return res.status(404).json({ ok: false, message: 'Owner not found' });
+    }
+
+    // Update fields if provided
+    if (fullName) owner.fullName = fullName;
+    if (email) owner.email = email;
+    if (vendingMachines) owner.vendingMachines = vendingMachines;
+
+    // Save the updated owner
+    await owner.save();
+
+    res.status(200).json({ ok: true, message: 'Vending machine owner updated successfully', owner });
+  } catch (error) {
+    console.error('Error updating vending machine owner:', error.message);
+    res.status(500).json({ ok: false, message: 'Server error' });
+  }
+};
